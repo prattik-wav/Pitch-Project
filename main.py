@@ -43,3 +43,18 @@ def get_prediction(ai_is_batting: bool, difficulty: int):
 def check_player(request: LoginRequest):
     exists = db.player_exists(request.player_name)
     return {"player_name": request.player_name, "exists": exists}
+
+@app.post("/register")
+def register(request: RegisterRequest):
+    success = db.register_player(request.player_name, request.password)
+    
+    if success:
+        return {
+            "status": "success", 
+            "player_name": request.player_name
+        }
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="Registration failed. Player might already exist."
+        )
