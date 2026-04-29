@@ -1,0 +1,7 @@
+build/
+*.so
+*.dylib
+*.pyd
+__pycache__/
+.DS_Store
+References/
