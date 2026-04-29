@@ -28,6 +28,9 @@ class DatabaseManager:
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.config['database']}")
             cursor.close()
             conn.close()
+
+            self.init_tables()
+            print("[SYSTEM] Database setup complete")
         except Error as e:
             print(f"[ERROR] Could not setup database: {e}")
         
@@ -58,7 +61,7 @@ class DatabaseManager:
             print(f"[ERROR] Failed to create tables: {e}")
         finally:
             cursor.close()
-            con.close()
+            conn.close()
 
     def player_exists(self, player_name: str) -> bool:
         conn = self.get_connection()
@@ -69,4 +72,4 @@ class DatabaseManager:
         result = cursor.fetchone()
         cursor.close()
         conn.close()
-        return Result is not None
+        return result is not None

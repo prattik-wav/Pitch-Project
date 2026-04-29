@@ -1,14 +1,20 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import sys
 import os
-from database import get_db_connection
+from database import DatabaseManager
 
 # Point Python to compiled C++ engine inside the build directory
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
-import handcricket_ai
+import handcricket_ai # type: ignore
 
 # Intialize FastAPI server
 app = FastAPI(title="Pitch.io", version="1.0")
+
+db = DatabaseManager("pratzelsql")
+
+class LoginRequest(BaseModel):
+    player_name: str
 
 # Health check Endpoint
 @app.get("/")
@@ -33,28 +39,7 @@ def get_prediction(ai_is_batting: bool, difficulty: int):
         "ai_prediction": ai_choice
     }
 
-# Database Endpoint to fetch player profile
-@app.get("/player/{player_name}")
-def get_player_profile(player_name: str):
-    conn = get_db_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    try:
-        cursor = conn.cursor(dictionary=True)
-        # Querying the exact table structure from Python file.
-        query = """
-                SELECT name, lifetime_runs, lifetime_wickets, total_matches, total_wins
-                FROM player_profile
-                WHERE name = %s
-            """
-        cursor.execute(query, (player_name,))
-        player = cursor.fetchone()
-
-        if not player:
-            raise HTTPException(status_code=404, detail=f"Player '{player_name}' not found")
-        
-        return {"status": "success", "data": player}
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+@app.post("/check_player")
+def check_player(request: LoginRequest):
+    exists = db.player_exists(request.player_name)
+    return {"player_name": request.player_name, "exists": exists}
