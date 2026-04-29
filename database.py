@@ -73,3 +73,23 @@ class DatabaseManager:
         cursor.close()
         conn.close()
         return result is not None
+    
+    def register_player(self, player_name: str, password: str) -> bool:
+        if self.player_exists(player_name):
+            return False
+        
+        conn = self.get_connection()
+        if not conn:
+            return False
+        
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("INSERT INTO player_profile (name, password) VALUES (%s, %s)", (player_name, password))
+            conn.commit()
+            return True
+        except Error:
+            return False
+        finally:
+            cursor.close()
+            conn.close()
