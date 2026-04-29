@@ -1,34 +1,10 @@
 from fastapi import FastAPI
-import mysql.connector 
-from mysql.connector import Error
 import sys
 import os
 
 # Point Python to compiled C++ engine inside the build directory
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
 import handcricket_ai
-
-# Database configuration
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "pratzelsql",
-    "database": "handcricket"
-}
-
-def get_db_connection():
-    """Establishes and returns a connection to the MySQL database."""
-    try:
-        connection = mysql.connector.connect(
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database=DB_CONFIG["database"]
-        )
-        return connection
-    except Error as e:
-        print(f"Error connecting to MySQL: {e}")
-        return None
 
 # Intialize FastAPI server
 app = FastAPI(title="Pitch.io", version="1.0")
