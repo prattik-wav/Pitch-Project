@@ -16,6 +16,10 @@ db = DatabaseManager("pratzelsql")
 class LoginRequest(BaseModel):
     player_name: str
 
+class RegisterRequest(BaseModel):
+    player_name: str
+    password: str
+
 # Health check Endpoint
 @app.get("/")
 def read_root():
