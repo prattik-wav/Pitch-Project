@@ -62,3 +62,11 @@ def register(request: RegisterRequest):
             status_code=400, 
             detail="Registration failed. Player might already exist."
         )
+    
+@app.get("/about")
+def about():
+    return {
+        "gamename": "Pitch.io",
+        "creator": "Prattik K",
+        "version": "1.0"
+    }
