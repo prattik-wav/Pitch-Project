@@ -97,7 +97,7 @@ class DatabaseManager:
                 ai_move INT NOT NULL,
                 is_wicket BOOLEAN DEFAULT FALSE,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (match_id) REFERENCES match_id(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                FOREIGN KEY (match_id) REFERENCES match_data(id) ON DELETE CASCADE ON UPDATE CASCADE,
                 INDEX idx_ai_memory (player_name, match_id)
             )
         """
