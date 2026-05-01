@@ -59,7 +59,7 @@ class DatabaseManager:
                 half_centuries   INT  DEFAULT 0,
                 avg_runs         FLOAT  DEFAULT 0.0
             )
-            """
+        """
         
         ddl_match_data = """
             CREATE TABLE IF NOT EXISTS match_data (
@@ -74,7 +74,7 @@ class DatabaseManager:
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_player_name (player_name)
             )
-            """
+        """
         
         ddl_achievements = """
             CREATE TABLE IF NOT EXISTS achievements (
@@ -85,10 +85,29 @@ class DatabaseManager:
                 UNIQUE KEY unique_achievement (player_name, achievement),
                 INDEX idx_player_name (player_name)
             )
-            """
+        """
+        
+        ddl_deliveries = """
+            CREATE TABLE IF NOT EXISTS deliveries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                match_id INT NOT NULL,
+                player_name VARCHAR(100) NOT NULL,
+                ball_number INT NOT NULL,
+                player_move INT NOT NULL,
+                ai_move INT NOT NULL,
+                is_wicket BOOLEAN DEFAULT FALSE,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (match_id) REFERENCES match_id(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                INDEX idx_ai_memory (player_name, match_id)
+            )
+        """
         
         try:
             cursor.execute(ddl_profile)
+            cursor.execute(ddl_match_data)
+            cursor.execute(ddl_achievements)
+            cursor.execute(ddl_deliveries)
+            print("[SYSTEM] All database tables verified/created successfully.")
             conn.commit()
         except Error as e:
             print(f"[ERROR] Failed to create tables: {e}")
