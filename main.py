@@ -78,7 +78,7 @@ def start_match(request: StartMatchRequest):
     
     return {
         "status": "success",
-        "message": "Match started successfully"
+        "message": "Match started successfully",
         "match_id": match_id,
         "player_name": request.player_name
     }
