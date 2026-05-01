@@ -20,6 +20,9 @@ class RegisterRequest(BaseModel):
     player_name: str
     password: str
 
+class StartMatchRequest(BaseModel):
+    player_name: str
+
 # Health check Endpoint
 @app.get("/")
 def read_root():
@@ -63,6 +66,23 @@ def register(request: RegisterRequest):
             detail="Registration failed. Player might already exist."
         )
     
+@app.post("/start_match")
+def start_match(request: StartMatchRequest):
+    match_id = db.create_match(request.player_name)
+
+    if match_id == -1:
+        raise HTTPException(
+            status_code = 500,
+            detail = "Failed to initialize match in the database"
+        )
+    
+    return {
+        "status": "success",
+        "message": "Match started successfully"
+        "match_id": match_id,
+        "player_name": request.player_name
+    }
+
 @app.get("/about")
 def about():
     return {
