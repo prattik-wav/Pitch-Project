@@ -198,6 +198,44 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
+    def update_match_score(self, match_id: int, runs_scored: int, is_wicket: bool, ai_is_batting: bool) -> bool:
+        """Update the live scoreboard for the active match"""
+        conn = self.get_connection()
+        if not conn:
+            return False
+        
+        cursor = conn.cursor()
+        try:
+            if not ai_is_batting:
+                # Player is batting
+                sql = """
+                    UPDATE match_data
+                    SET runs = runs + %s,
+                        wickets = wickets + %s,
+                        balls_faced = balls_faced + 1
+                    WHERE id = %s
+                """
+                wicket_val = 1 if is_wicket else 0
+                cursor.execute(sql, (runs_scored, wicket_val, match_id))
+            else:
+                # Player is bowling (AI is batting)
+                sql = """
+                    UPDATE match_data 
+                    SET player_runs_conceded = player_runs_conceded + %s, 
+                        player_balls_bowled = player_balls_bowled + 1 
+                    WHERE id = %s
+                """
+                cursor.execute(sql, (runs_scored, match_id))
+
+            conn.commit()
+            return True
+        except Error as e:
+            print(f"[ERROR] Could not update scoreboard: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     def get_recent_plays(self, match_id: int, limit: int = 5) -> list[int]:
         """Fetches the most recent moves made by the player in a specific match"""
         conn = self.get_connection()
