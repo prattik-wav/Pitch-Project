@@ -196,3 +196,36 @@ class DatabaseManager:
         finally:
             cursor.close()
             conn.close()
+
+    def get_recent_plays(self, match_id: int, limit: int = 5) -> list[int]:
+        """Fetches the most recent moves made by the player in a specific match"""
+        conn = self.get_connection()
+        if not conn:
+            return []
+
+        cursor = conn.cursor()
+        try:
+            # we want the most recent deliveries, so we order by ball_number DESC
+            # limit restricts how many rows we pullback to save memory
+            sql = """
+                SELECT player_move
+                FROM deliveries
+                WHERE match_id = %s
+                ORDER BY ball_number DESC]
+                LIMIT %s
+            """
+
+            cursor.execute(sql, (match_id, limit))
+            results = cursor.fetchall()
+
+            # The database returns a list of tuples like [(4, 1), (1, ), (6, )]
+            # we use a list of comprehension to filter it into a simple list [ 4, 1, 6]
+            recent_plays = [row[0] for row in results]
+
+            return recent_plays
+        except Error as e:
+            print(f"[ERROR] Could not fetch recent plays: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
