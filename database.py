@@ -70,6 +70,7 @@ class DatabaseManager:
                 balls_faced INT  DEFAULT 0,
                 player_balls_bowled INT  DEFAULT 0,
                 player_runs_conceded INT  DEFAULT 0,
+                status VARCHAR(20) DEFAULT "IN_PROGRESS",
                 result VARCHAR(10),
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_player_name (player_name)
@@ -146,7 +147,7 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
-    def create_player(self, player_name: str):
+    def create_match(self, player_name: str):
         """Creates a new match record and returns the match_id"""
         conn = self.get_connection()
         if not conn:
@@ -155,7 +156,7 @@ class DatabaseManager:
         cursor = conn.cursor()
         try:
             # We try to insert a new row with the player's name to start the match
-            sql = "INSERT INTO match_data (player_name, status VALUES (%s, %s))"
+            sql = "INSERT INTO match_data (player_name, status) VALUES (%s, %s)"
             cursor.execute(sql, (player_name, "IN_PROGRESS"))
             conn.commit()
 
@@ -211,7 +212,7 @@ class DatabaseManager:
                 SELECT player_move
                 FROM deliveries
                 WHERE match_id = %s
-                ORDER BY ball_number DESC]
+                ORDER BY ball_number DESC
                 LIMIT %s
             """
 
