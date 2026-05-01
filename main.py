@@ -23,28 +23,17 @@ class RegisterRequest(BaseModel):
 class StartMatchRequest(BaseModel):
     player_name: str
 
+class PlayTurnRequest(BaseModel):
+    match_id: int
+    player_name: str
+    player_move: int
+    ai_is_batting: bool
+    difficulty: int
+
 # Health check Endpoint
 @app.get("/")
 def read_root():
     return {"message": "FastAPI server is running", "c++ engine": "Connected"}
-
-# Prediction Endpoint
-@app.get("/predict")
-def get_prediction(ai_is_batting: bool, difficulty: int):
-    # mock datas for initial test
-    # Endpoint to pull live game arrays from MySQL
-    mock_memory_cache = [4, 4, 1, 4, 6]
-
-    # Call the C++ engine
-    ai_choice = handcricket_ai.get_ai_prediction(mock_memory_cache, ai_is_batting, difficulty)
-
-    return {
-        "status": "success",
-        "scenario": "AI batting" if ai_is_batting else "AI bowling",
-        "difficulty_level": difficulty,
-        "player_memory_analyzed": mock_memory_cache,
-        "ai_prediction": ai_choice
-    }
 
 @app.post("/check_player")
 def check_player(request: LoginRequest):
