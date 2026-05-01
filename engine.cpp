@@ -10,7 +10,7 @@ std::mt19937 globalRNG(time(0));
 // The engine is now completely stateless. Python will query the MySQL DB,
 // get the recent plays, and pass them into this function.
 int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int difficulty) {
-    std::uniform_int_distribution<> dis(0, 6);
+    std::uniform_int_distribution<> dis(0, 10);
 
     // LEVEL 1: NOVICE
     if (difficulty == 1) {
@@ -31,15 +31,15 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
     }
 
     // -- Pattern Recognition Engine --
-    int frequencies[7] = {0, 0, 0, 0, 0, 0, 0};
+    int frequencies[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     for (int play : recentPlays) {
-        if (play >= 0 && play <= 6) {
+        if (play >= 0 && play <= 10) {
             frequencies[play]++;
         }
     }
 
     int mostFrequentNum = 0, maxCount = 0;
-    for (int i = 0; i <= 6; i++) {
+    for (int i = 0; i <= 10; i++) {
         if (frequencies[i] > maxCount) {
             maxCount = frequencies[i];
             mostFrequentNum = i;
@@ -51,7 +51,7 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
         return mostFrequentNum;
     } else {
         int leastFrequentNum = 0, minCount = frequencies[0];
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 10; i++) {
             if (frequencies[i] < minCount) {
                 minCount = frequencies[i];
                 leastFrequentNum = i;

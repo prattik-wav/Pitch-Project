@@ -42,16 +42,49 @@ class DatabaseManager:
         cursor = conn.cursor()
 
         ddl_profile = """
-                CREATE TABLE IF NOT EXISTS player_profile ( 
-                    id INT AUTO_INCREMENT PRIMARY KEY, 
-                    name VARCHAR(100) UNIQUE NOT NULL,
-                    password VARCHAR(100) NOT NULL, 
-                    lifetime_runs INT DEFAULT 0, 
-                    lifetime_wickets INT DEFAULT 0, 
-                    total_matches INT DEFAULT 0, 
-                    total_wins INT DEFAULT 0, 
-                    total_losses INT DEFAULT 0
-                )
+            CREATE TABLE IF NOT EXISTS player_profile ( 
+                id               INT AUTO_INCREMENT PRIMARY KEY, 
+                name             VARCHAR(100) UNIQUE NOT NULL,
+                password         VARCHAR(100) NOT NULL, 
+                lifetime_runs    INT  DEFAULT 0, 
+                lifetime_wickets INT  DEFAULT 0, 
+                total_matches    INT  DEFAULT 0, 
+                total_wins       INT  DEFAULT 0, 
+                total_losses     INT  DEFAULT 0, 
+                total_draws      INT  DEFAULT 0,
+                lifetime_balls_faced INT  DEFAULT 0,
+                lifetime_balls_bowled INT  DEFAULT 0,
+                lifetime_runs_conceded INT  DEFAULT 0,
+                centuries        INT  DEFAULT 0,
+                half_centuries   INT  DEFAULT 0,
+                avg_runs         FLOAT  DEFAULT 0.0
+            )
+            """
+        
+        ddl_match_data = """
+            CREATE TABLE IF NOT EXISTS match_data (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                player_name VARCHAR(100) NOT NULL,
+                runs INT  DEFAULT 0,
+                wickets INT  DEFAULT 0,
+                balls_faced INT  DEFAULT 0,
+                player_balls_bowled INT  DEFAULT 0,
+                player_runs_conceded INT  DEFAULT 0,
+                result VARCHAR(10),
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_player_name (player_name)
+            )
+            """
+        
+        ddl_achievements = """
+            CREATE TABLE IF NOT EXISTS achievements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                player_name VARCHAR(100) NOT NULL,
+                achievement VARCHAR(100) NOT NULL,
+                achieved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_achievement (player_name, achievement),
+                INDEX idx_player_name (player_name)
+            )
             """
         
         try:
