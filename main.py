@@ -35,6 +35,52 @@ class PlayTurnRequest(BaseModel):
 def read_root():
     return {"message": "FastAPI server is running", "c++ engine": "Connected"}
 
+@app.post("/play_turn")
+def play_turn(request: PlayTurnRequest):
+    # Ensure the move is valid (0-10)
+    if request.player_move < 0 or request.player_move > 10:
+        raise HTTPException(status_code = 400, detail = "Invalid move. Must be between 0 and 10")
+    
+    # Grab the last 5 plays from MySQL
+    recent_plays = db.get_recent_plays(request.match_id, limit=5)
+
+    # Feed the history to C++ Engine
+    ai_move = handcricket_ai.get_ai_prediction(
+        recent_plays,
+        request.ai_is_batting,
+        request.difficulty
+    )
+
+    # Check for a wicket
+    is_wicket = (request.player_move == ai_move)
+
+    # Calculate runs for this specific ball
+    runs_scored = 0
+    if not is_wicket:
+        runs_scored = ai_move if request.ai_is_batting else request.player_move
+
+    # Permanently record this delivery in the database
+    success = db.record_delivery(
+        match_id = request.match_id,
+        player_name = request.player_name,
+        player_move = request.player_move,
+        ai_move = ai_move,
+        is_wicket = is_wicket
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Database error: Could not record delivery")
+    
+    # Return result to frontend
+    return {
+        "status": "success",
+        "player_move": request.player_move,
+        "ai_move": ai_move,
+        "is_wicket": is_wicket,
+        "runs_scored": runs_scored,
+        "message": "WICKET!" if is_wicket else f"{runs_scored} runs scored."
+    }
+
 @app.post("/check_player")
 def check_player(request: LoginRequest):
     exists = db.player_exists(request.player_name)
