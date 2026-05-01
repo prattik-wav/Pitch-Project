@@ -50,14 +50,25 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
     if (!aiIsBatting) {
         return mostFrequentNum;
     } else {
-        int leastFrequentNum = 0, minCount = frequencies[0];
+        // Finding the absolute minimum frequency first
+        int minCount = frequencies[0];
         for (int i = 1; i <= 10; i++) {
             if (frequencies[i] < minCount) {
                 minCount = frequencies[i];
-                leastFrequentNum = i;
             }
         }
-        return leastFrequentNum;
+        
+        // Collect all the numbers that share the minimum frequency
+        std::vector<int> bestMoves;
+        for (int i = 0; i <= 10; i++) {
+            if (frequencies[i] == minCount) {
+                bestMoves.push_back(i);
+            }
+        }
+
+        // Pick one randomly to eliminate predicatability
+        std::uniform_int_distribution<> tieBreaker(0, bestMoves.size() - 1);
+        return bestMoves[tieBreaker(globalRNG)];
     }
 }
 
