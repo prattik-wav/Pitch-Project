@@ -145,3 +145,54 @@ class DatabaseManager:
         finally:
             cursor.close()
             conn.close()
+
+    def create_player(self, player_name: str):
+        """Creates a new match record and returns the match_id"""
+        conn = self.get_connection()
+        if not conn:
+            return -1
+        
+        cursor = conn.cursor()
+        try:
+            # We try to insert a new row with the player's name to start the match
+            sql = "INSERT INTO match_data (player_name, status VALUES (%s, %s))"
+            cursor.execute(sql, (player_name, "IN_PROGRESS"))
+            conn.commit()
+
+            # cursor.lastrowid gets the ID of the row we just created
+            match_id = cursor.lastrowid
+            return match_id
+        except Error as e:
+            print(f"[ERROR] Could not create match: {e}")
+            return -1
+        finally:
+            cursor.close()
+            conn.close()
+
+    def record_delivery(self, match_id: int, player_name: str, player_move: int, ai_move: int, is_wicket: bool) -> bool:
+        """Save a single ball to the deliveries table for the ai to learn from later"""
+        conn = self.get_connection()
+        if not conn:
+            return False
+        
+        cursor = conn.cursor()
+        try:
+            # Figure out what ball number is this for this specific match
+            cursor.execute("SELECT COUNT(*) FROM deliveries WHERE match_id = %s", (match_id,))
+            ball_number = cursor.fetchone()[0] + 1
+
+            # Insert the exact delivery data 
+            sql = """INSERT INTO deliveries
+                (match_id, player_name, ball_number, player_move, ai_move, is_wicket)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+
+            cursor.execute(sql, (match_id, player_name, ball_number, player_move, ai_move, is_wicket))
+            conn.commit()
+            return True
+        except Error as e:
+            print(f"[ERROR] Could not record delivery: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
