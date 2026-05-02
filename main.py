@@ -209,6 +209,7 @@ def play_turn(request: PlayTurnRequest):
         # POST MATCH ACHIEVEMENTS
         profile = db.get_player_profile(request.player_name)
         live_wins = profile.get("total_wins", 0)
+        live_loss = profile.get("total_losses", 0)
 
         if result == "WIN":
             if live_wins >= 1:
@@ -220,6 +221,16 @@ def play_turn(request: PlayTurnRequest):
             if live_wins >= 50:
                 if db.unlock_achievement(request.player_name, "Pitch Dominator"):
                     new_achievements.append("Pitch Dominator")
+        if result == "LOSS":
+            if live_loss >= 1:
+                if db.unlock_achievement(request.player_name, "First Loss"):
+                    new_achievements.append("First Loss")
+            if live_loss >= 10:
+                if db.unlock_achievement(request.player_name, "A Failure"):
+                    new_achievements.append("A Failure.")
+            if live_loss >= 50:
+                if db.unlock_achievement(request.player_name, "The Disgrace."):
+                    new_achievements.append("The Disgrace.")
         if result == "DRAW":
             if db.unlock_achievement(request.player_name, "A Rare Sight."):
                 new_achievements.append("A rare Sight.")
