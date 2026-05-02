@@ -121,7 +121,8 @@ def play_turn(request: PlayTurnRequest):
     live_career_runs = baseline_career_runs + total_match_runs
     live_career_wickets = baseline_career_wickets + total_match_wickets
 
-    if request.match_id == 1:
+    profile = db.get_player_profile(request.player_name)
+    if profile.get("total_matches", 0) == 1:
         if db.unlock_achievement(request.player_name, "Welcome to the Pitch!"):
             new_achievements.append("Welcome to the Pitch!")
 

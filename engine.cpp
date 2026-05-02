@@ -67,6 +67,19 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
         // Pick one randomly to eliminate predicatability
         std::uniform_int_distribution<> tieBreaker(0, bestMoves.size() - 1);
         return bestMoves[tieBreaker(globalRNG)];
+    } else {
+        int minCount = frequencies[0];
+
+        for (int i = 1; i <= 10; i++) {
+            if (frequencies[i] < minCount) minCount = frequencies[i];
+        }
+        
+        std::vector<int> safeMoves;
+        for (int i = 0; i <= 10; i++) {
+            if (frequencies[i] == minCount) safeMoves.push_back(i);
+        }
+        std::uniform_int_distribution<> tieBreaker(0, safeMoves.size() - 1);
+        return safeMoves[tieBreaker(globalRNG)];
     }
 }
 
