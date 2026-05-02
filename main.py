@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import sys
 import os
+from dotenv import load_dotenv
 from database import DatabaseManager
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 # Point Python to compiled C++ engine inside the build directory
@@ -20,7 +21,14 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-db = DatabaseManager("pratzelsql")
+# Load from .env file
+load_dotenv()
+
+# Grab password securely
+db_pass = os.getenv("DB_PASSWORD")
+
+# Initialize database
+db = DatabaseManager(db_pass)
 
 class LoginRequest(BaseModel):
     player_name: str
