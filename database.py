@@ -419,3 +419,49 @@ class DatabaseManager:
         finally:
             cursor.close()
             conn.close()
+
+    def get_leaderboard(self) -> list[dict]:
+        """Fetches all players, calculates advanced cricket stats, and ranks them by Wins."""
+        conn = self.get_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # We fetch everyone ordered by who has the most wins
+            cursor.fetchone("SELECT * FROM player_profile ORDER BY total_wins DESC, lifetime_runs DESC")
+            players = cursor.fetchall()
+            
+            leaderboard = []
+            for p in players:
+                # Prevent diversion by zero errors for new players
+                balls_faced = max(1, p["lifetime_balls_faced"])
+                overs_bowled = max(0.166, p["lifetime_balls_bowled"] / 6) # 1 ball is roughly 0.166 of an over
+                matches = max(1, p["total_matches"])
+                
+                # Calculate Stats
+                strike_rate = round((p["lifetime_runs"] / balls_faced) * 100, 2)
+                economy_rate = round(p["lifetime_runs_conceded"] / overs_bowled, 2)
+                win_rate = round((p["total_wins"] / matches) * 100, 2)
+
+                # Strip out the password and format data for front-end
+                safe_profile = {
+                    "rank": len(leaderboard) + 1,
+                    "name": p["name"],
+                    "wins": p["total_wins"],
+                    "win_rate": f"{win_rate}%",
+                    "runs": p["lifetime_runs"],
+                    "wickets": p["lifetime_wickets"],
+                    "strike_rate": strike_rate,
+                    "economy": economy_rate,
+                    "matches_played": p["total_matches"]
+                }
+                leaderboard.append(safe_profile)
+            
+            return leaderboard
+        except Error as e:
+            print(f"[ERROR] Could not fetch leaderboard")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
