@@ -67,6 +67,7 @@ class DatabaseManager:
                 player_name VARCHAR(100) NOT NULL,
                 runs INT  DEFAULT 0,
                 wickets INT  DEFAULT 0,
+                ai_wickets INT DEFAULT 0,
                 balls_faced INT  DEFAULT 0,
                 player_balls_bowled INT  DEFAULT 0,
                 player_runs_conceded INT  DEFAULT 0,
@@ -206,6 +207,7 @@ class DatabaseManager:
         
         cursor = conn.cursor()
         try:
+            wicket_val = 1 if is_wicket else 0
             if not ai_is_batting:
                 # Player is batting
                 sql = """
@@ -221,11 +223,12 @@ class DatabaseManager:
                 # Player is bowling (AI is batting)
                 sql = """
                     UPDATE match_data 
-                    SET player_runs_conceded = player_runs_conceded + %s, 
+                    SET player_runs_conceded = player_runs_conceded + %s,
+                        ai_wickets = ai_wickets + %s
                         player_balls_bowled = player_balls_bowled + 1 
                     WHERE id = %s
                 """
-                cursor.execute(sql, (runs_scored, match_id))
+                cursor.execute(sql, (runs_scored, wicket_val, match_id))
 
             conn.commit()
             return True
@@ -251,13 +254,62 @@ class DatabaseManager:
             if not match:
                 return {"status": "error"}
             
-            # Check the Wicket limit (currently: 1)
-            if match["wickets"] >= 1 and match["status"] == "IN_PROGRESS":
-                # The innings is over; Update the status
-                cursor.execute("UPDATE match_data SET status = 'COMPLETED' WHERE ID = %s", (match_id, ))
-                conn.commit()
-                return {"status": "COMPLETED", "final_runs": match["runs"], "final_wickets": match["wickets"]}
-            return {"status": "IN_PROGRESS", "current_runs": match["runs"], "current_wickets": match["wickets"]}
+            p_runs = match["runs"]
+            p_wickets = match["wickets"]
+            ai_runs = match["player_runs_conceded"]
+            ai_wickets = match["ai_wickets"]
+
+            is_completed = False
+            result = None
+
+            # Condition 1 : Both teams are out
+            if p_wickets >= 1 and ai_wickets >= 1:
+                is_completed = True
+                if p_runs > ai_runs: result = "WIN"
+                elif ai_runs > p_runs: result = "LOSS"
+                else: result = "DRAW"
+            
+            # Condition 2 : Player is chasing and passes the AI
+            elif ai_wickets >= 1 and p_runs > ai_runs:
+                is_completed = True
+                result = "WIN"
+            
+            # Condition 3 : AI is chasing and passed player
+            elif p_wickets >= 1 and ai_runs > p_runs:
+                is_completed = True
+                result = "LOSS"
+
+            # Execute END Game or Return Live Data
+            if is_completed and match["status"] == "IN_PROGRESS":
+               sql = ("""
+                    UPDATE match_data
+                    SET status = 'COMPLETED', result = %s
+                    WHERE id = %s
+                """)
+               cursor.execute(sql, (result, match_id))
+               conn.commit()
+               return {"status": "COMPLETED",
+                       "result": result, 
+                       "final_runs": p_runs, 
+                       "final_wickets": p_wickets, 
+                       "ai_final_runs": ai_runs, 
+                       "ai_final_wickets": ai_wickets
+                    }
+            
+            # Check innings if match is still present
+            innings = 1 if(p_wickets == 0 and ai_wickets == 0) else 2
+            target = None
+            if innings == 2:
+                target = (p_runs + 1) if p_wickets == 1 else (ai_runs + 1)
+            
+            return {
+                "status": "COMPLETED", 
+                "result": result, 
+                "final_runs": p_runs, 
+                "final_wickets": p_wickets, 
+                "ai_final_runs": ai_runs, 
+                "ai_final_wickets": ai_wickets
+            }
         except Error as e:
             print(f"[ERROR] Could not check match status: {e}")
             return {"status": "error"}
@@ -303,7 +355,7 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
-    def update_career_stats(self, player_name: str, match_runs: int, match_wickets: int) -> bool:
+    def update_career_stats(self, player_name: str, match_runs: int, match_wickets: int, result: str) -> bool:
         """Permanently adds the match results to the player's lifetime total stats"""
         conn = self.get_connection()
         if not conn:
@@ -311,14 +363,21 @@ class DatabaseManager:
         
         cursor = conn.cursor()
         try:
+            win_val = 1 if result == "WIN" else 0
+            loss_val = 1 if result == "LOSS" else 0
+            draw_val = 1 if result == "DRAW" else 0
+
             sql = """
                 UPDATE player_profile 
-                SET lifetime_runs = lifetime_runs + %s
-                    lifetime_wickets = lifetime_wickets + %s
-                    total_matches = total_matches + 1
+                SET lifetime_runs = lifetime_runs + %s,
+                    lifetime_wickets = lifetime_wickets + %s,
+                    total_matches = total_matches + 1,
+                    total_wins = total_wins + %s,
+                    total_losses = total_losses + %s,
+                    total_draws = total_draws + %s
                 WHERE name = %s
             """
-            cursor.execute(sql, (match_runs, match_wickets, player_name))
+            cursor.execute(sql, (match_runs, match_wickets, win_val, loss_val, draw_val, player_name))
             conn.commit()
             return True
         except Error as e:

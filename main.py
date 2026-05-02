@@ -197,12 +197,32 @@ def play_turn(request: PlayTurnRequest):
 
     # Return result to frontend
     if match_state["status"] == "COMPLETED":
+        result = match_state["result"]
         #Save final stats to DB player profile
         db.update_career_stats(
             player_name = request.player_name,
             match_runs = match_state['final_runs'],
-            match_wickets = match_state['final_wickets']
+            match_wickets = match_state['final_wickets'],
+            result = result
         )
+
+        # POST MATCH ACHIEVEMENTS
+        profile = db.get_player_profile(request.player_name)
+        live_wins = profile.get("total_wins", 0)
+
+        if result == "WIN":
+            if live_wins > 1:
+                if db.unlock_achievement(request.player_name, "First Victory"):
+                    new_achievements.append("First Victory")
+            if live_wins > 10:
+                if db.unlock_achievement(request.player_name, "Champion"):
+                    new_achievements.append("Champion")
+            if live_wins >= 50:
+                if db.unlock_achievement(request.player_name, "Pitch Dominator"):
+                    new_achievements.append("Pitch Dominator")
+        if result == "DRAW":
+            if db.unlock_achievement(request.player_name, "A Rare Sight."):
+                new_achievements.append("A rare sight.")
 
         return {
             "status": "COMPLETED",
