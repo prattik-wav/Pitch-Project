@@ -68,6 +68,14 @@ def play_turn(request: PlayTurnRequest):
         is_wicket = is_wicket
     )
 
+    # update the live scoreboard
+    db.update_match_score(
+        match_id = request.match_id,
+        runs_scored = runs_scored,
+        is_wicket = is_wicket,
+        ai_is_batting = request.ai_is_batting
+    )
+
     if not success:
         raise HTTPException(status_code=500, detail="Database error: Could not record delivery")
     
