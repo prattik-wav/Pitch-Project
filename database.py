@@ -265,6 +265,27 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
+    def unlock_achievement(self, player_name: str, achievement: str) -> bool:
+        """Attempts to unlock an achievement, Returns True if they don't have it already or returns False if they do"""
+        conn = self.get_connection()
+        if not conn:
+            return False
+        
+        cursor = conn.cursor()
+        try:
+            sql = "INSERT INTO achievements (player_name, achievement) VALUES (%s, %s)"
+            cursor.execute(sql, player_name, achievement)
+            return True # Successfully unlocked new achievement
+        except IntegrityError:
+            # Already unlocked Achievement
+            return False
+        except Error as e:
+            print(f"[ERROR] Could not unlock achievement: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     def get_recent_plays(self, match_id: int, limit: int = 5) -> list[int]:
         """Fetches the most recent moves made by the player in a specific match"""
         conn = self.get_connection()
