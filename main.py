@@ -281,6 +281,19 @@ def start_match(request: StartMatchRequest):
         "player_name": request.player_name
     }
 
+@app.get("/leaderboard")
+def leaderboard():
+    top_players = db.get_leaderboard()
+
+    if not top_players:
+        raise HTTPException(status_code=500, detail="Could not fetch leaderboard")
+    
+    return {
+        "status": "success",
+        "total_players": len(top_players),
+        "leaderboard": top_players
+    }
+
 @app.get("/about")
 def about():
     return {
