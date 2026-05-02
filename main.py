@@ -104,7 +104,7 @@ def play_turn(request: PlayTurnRequest):
 
     # Calculate runs scored so far
     total_match_runs = match_state.get("current_runs", match_state.get("final_runs", 0))
-    total_match_wickets = match_state.get("current_wickets", match_state.get("final_wickets", 0))
+    total_match_wickets = match_state.get("ai_wickets", match_state.get("ai_final_wickets", 0))
 
     # Get lifetime runs  and calculate true live career runs
     profile = db.get_player_profile(request.player_name)
@@ -149,7 +149,7 @@ def play_turn(request: PlayTurnRequest):
                 new_achievements.append("The Destroyer")
         if live_career_runs >= 500:
             if db.unlock_achievement(request.player_name, "The Undefeated One"):
-                new_achievements.append("The Undefeated one")
+                new_achievements.append("The Undefeated One")
         if live_career_runs >= 1000:
             if db.unlock_achievement(request.player_name, "The God of War"):
                 new_achievements.append("The God of War")
@@ -202,7 +202,7 @@ def play_turn(request: PlayTurnRequest):
         db.update_career_stats(
             player_name = request.player_name,
             match_runs = match_state['final_runs'],
-            match_wickets = match_state['final_wickets'],
+            match_wickets = match_state['ai_final_wickets'],
             result = result
         )
 
@@ -226,21 +226,21 @@ def play_turn(request: PlayTurnRequest):
                 if db.unlock_achievement(request.player_name, "First Loss"):
                     new_achievements.append("First Loss")
             if live_loss >= 10:
-                if db.unlock_achievement(request.player_name, "A Failure"):
+                if db.unlock_achievement(request.player_name, "A Failure."):
                     new_achievements.append("A Failure.")
             if live_loss >= 50:
                 if db.unlock_achievement(request.player_name, "The Disgrace."):
                     new_achievements.append("The Disgrace.")
         if result == "DRAW":
             if db.unlock_achievement(request.player_name, "A Rare Sight."):
-                new_achievements.append("A rare Sight.")
+                new_achievements.append("A Rare Sight.")
 
         return {
             "status": "COMPLETED",
             "player_move": request.player_move,
             "ai_move": ai_move,
             "is_wicket": is_wicket,
-            "message": f"MATCH OVER! Final Score: {match_state['final_runs']}/{match_state['final_wickets']}",
+            "message": f"MATCH OVER! Final Score: {match_state['final_runs']}/{match_state['final_wickets']} Target: {match_state['ai_final_runs']}",
             "final_score": match_state,
             "unlocked_achievements": new_achievements
         }

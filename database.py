@@ -254,6 +254,16 @@ class DatabaseManager:
             if not match:
                 return {"status": "error"}
             
+            if match["status"] == "COMPLETED":
+                return {
+                    "status": "COMPLETED",
+                    "result": match["result"],
+                    "final_runs": match["runs"],
+                    "final_wickets": match["wickets"],
+                    "ai_final_runs": match["player_runs_conceded"],
+                    "ai_final_wickets": match["ai_wickets"]
+                }
+
             p_runs = match["runs"]
             p_wickets = match["wickets"]
             ai_runs = match["player_runs_conceded"]
