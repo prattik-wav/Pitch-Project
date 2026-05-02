@@ -245,10 +245,10 @@ class DatabaseManager:
         if not conn:
             return {"status": "error"}
         
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         try:
             # Get the current score
-            cursor.execute("SELECT status, runs, wickets FROM match_data WHERE id = %s", (match_id, ))
+            cursor.execute("SELECT * FROM match_data WHERE id = %s", (match_id, ))
             match = cursor.fetchone()
 
             if not match:
@@ -309,7 +309,8 @@ class DatabaseManager:
                 "current_runs": p_runs, 
                 "current_wickets": p_wickets, 
                 "ai_runs": ai_runs, 
-                "ai_wickets": ai_wickets
+                "ai_wickets": ai_wickets,
+                "innings": innings
             }
         except Error as e:
             print(f"[ERROR] Could not check match status: {e}")
