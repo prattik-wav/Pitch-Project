@@ -236,6 +236,35 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
+    def check_match_status(self, match_id: int) -> dict:
+        """Checks if the match has reached its end conditions"""
+        conn = self.get_connection()
+        if not conn:
+            return {"status": "error"}
+        
+        cursor = conn.cursor()
+        try:
+            # Get the current score
+            cursor.execute("SELECT status, runs, wickets FROM match_data WHERE id = %s", (match_id, ))
+            match = cursor.fetchone()
+
+            if not match:
+                return {"status": "error"}
+            
+            # Check the Wicket limit (currently: 1)
+            if match["wickets"] >= 1 and match["status"] == "IN_PROGRESS":
+                # The innings is over; Update the status
+                cursor.execute("UPDATE match_data SET status = 'COMPLETED' WHERE ID = %s", (match_id, ))
+                conn.commit()
+                return {"status": "COMPLETED", "final_runs": match["runs"], "final_wickets": match["wickets"]}
+            return {"status": "IN_PROGRESS", "current_runs": match["runs"], "current_wickets": match["wickets"]}
+        except Error as e:
+            print(f"[ERROR] Could not check match status: {e}")
+            return {"status": "error"}
+        finally:
+            cursor.close()
+            conn.close()
+
     def get_recent_plays(self, match_id: int, limit: int = 5) -> list[int]:
         """Fetches the most recent moves made by the player in a specific match"""
         conn = self.get_connection()

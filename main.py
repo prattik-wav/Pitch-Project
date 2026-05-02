@@ -79,14 +79,27 @@ def play_turn(request: PlayTurnRequest):
     if not success:
         raise HTTPException(status_code=500, detail="Database error: Could not record delivery")
     
+    # Check if match is over
+    match_state = db.check_match_status(request.match_id)
+    
     # Return result to frontend
+    if match_state["status"] == "COMPLETED":
+        return {
+            "status": "COMPLETED",
+            "player_move": request.player_move,
+            "ai_move": ai_move,
+            "is_wicket": is_wicket,
+            "message": f"MATCH OVER! Final Score: {match_state['final_runs']}/{match_state['final_wickets']}",
+            "final_score": match_state
+        }
     return {
         "status": "success",
         "player_move": request.player_move,
         "ai_move": ai_move,
         "is_wicket": is_wicket,
         "runs_scored": runs_scored,
-        "message": "WICKET!" if is_wicket else f"{runs_scored} runs scored."
+        "message": "WICKET!" if is_wicket else f"{runs_scored} runs scored.",
+        "current_score": match_state
     }
 
 @app.post("/check_player")
