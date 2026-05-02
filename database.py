@@ -1,5 +1,5 @@
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, IntegrityError
 
 class DatabaseManager:
     def __init__(self, db_password: str):
