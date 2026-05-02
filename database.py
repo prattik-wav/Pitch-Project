@@ -303,12 +303,13 @@ class DatabaseManager:
                 target = (p_runs + 1) if p_wickets == 1 else (ai_runs + 1)
             
             return {
-                "status": "COMPLETED", 
+                "status": "IN_PROGRESS", 
                 "result": result, 
-                "final_runs": p_runs, 
-                "final_wickets": p_wickets, 
-                "ai_final_runs": ai_runs, 
-                "ai_final_wickets": ai_wickets
+                "target": target,
+                "current_runs": p_runs, 
+                "current_wickets": p_wickets, 
+                "ai_runs": ai_runs, 
+                "ai_wickets": ai_wickets
             }
         except Error as e:
             print(f"[ERROR] Could not check match status: {e}")
