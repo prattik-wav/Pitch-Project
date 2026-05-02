@@ -98,16 +98,119 @@ def play_turn(request: PlayTurnRequest):
     
     # Check if match is over
     match_state = db.check_match_status(request.match_id)
-    
+
+    # Check achievement [LIVE]
+    new_achievements = []
+
+    # Calculate runs scored so far
+    total_match_runs = match_state.get("current_runs", match_state.get("final_runs", 0))
+    total_match_wickets = match_state.get("current_wickets", match_state.get("final_wickets", 0))
+
+    # Get lifetime runs  and calculate true live career runs
+    profile = db.get_player_profile(request.player_name)
+    baseline_career_runs = profile.get("lifetime_runs", 0)
+    baseline_career_wickets = profile.get("lifetime_wickets", 0)
+    live_career_runs = baseline_career_runs + total_match_runs
+    live_career_wickets = baseline_career_wickets + total_match_wickets
+
+    if request.match_id == 1:
+        if db.unlock_achievement(request.player_name, "Welcome to the Pitch!"):
+            new_achievements.append("Welcome to the Pitch!")
+
+    if request.difficulty == 1:
+        if db.unlock_achievement(request.player_name, "The Tarnished."):
+            new_achievements.append("The Tarnished.")
+    elif request.difficulty == 2:
+        if db.unlock_achievement(request.player_name, "The Chosen."):
+            new_achievements.append("The Chosen.")
+    else:
+        if db.unlock_achievement(request.player_name, "The Clairvoyant."):
+            new_achievements.append("The Clairvoyant.")
+
+    if request.difficulty == 1 or request.difficulty == 2:
+        # Runs Achievements
+        if live_career_runs >= 1:
+            if db.unlock_achievement(request.player_name, "First Shot"):
+                new_achievements.append("First Shot")
+        if live_career_runs >= 10:
+            if db.unlock_achievement(request.player_name, "Determined"):
+                new_achievements.append("Determined")
+        if live_career_runs >= 30:
+            if db.unlock_achievement(request.player_name, "Crazed Batter"):
+                new_achievements.append("Crazed Batter")
+        if live_career_runs >= 50:
+            if db.unlock_achievement(request.player_name, "Half-Century Maker"):
+                new_achievements.append("Half-Century Maker")
+        if live_career_runs >= 100:
+            if db.unlock_achievement(request.player_name, "Century Maker"):
+                new_achievements.append("Century Maker")
+        if live_career_runs >= 200:
+            if db.unlock_achievement(request.player_name, "The Destroyer"):
+                new_achievements.append("The Destroyer")
+        if live_career_runs >= 500:
+            if db.unlock_achievement(request.player_name, "The Undefeated One"):
+                new_achievements.append("The Undefeated one")
+        if live_career_runs >= 1000:
+            if db.unlock_achievement(request.player_name, "The God of War"):
+                new_achievements.append("The God of War")
+        # Wickets Achievements
+        if live_career_wickets >=1:
+            if db.unlock_achievement(request.player_name, "First Blood"):
+                new_achievements.append("First Blood")
+        if live_career_wickets >= 10:
+            if db.unlock_achievement(request.player_name, "Wicket Taker"):
+                new_achievements.append("First Blood")
+        if live_career_wickets >= 30:
+            if db.unlock_achievement(request.player_name, "The Speedster"):
+                new_achievements.append("The Speedster")
+        if live_career_wickets >= 50:
+            if db.unlock_achievement(request.player_name, "The Magician"):
+                new_achievements.append("The Magician")
+        if live_career_wickets >= 100:
+            if db.unlock_achievement(request.player_name, "Bowling Maestro"):
+                new_achievements.append("Bowling Maestro")
+        if live_career_wickets >= 200:
+            if db.unlock_achievement(request.player_name, "Merciless"):
+                new_achievements.append("Merciless")
+        if live_career_wickets >= 500:
+            if db.unlock_achievement(request.player_name, "The Relentless"):
+                new_achievements.append("The Relentless")
+        if live_career_wickets >= 1000:
+            if db.unlock_achievement(request.player_name, "The God of Death"):
+                new_achievements.append("The God of Death")
+        # Hybrid Achievements
+        if live_career_runs >= 50 and live_career_wickets >= 50:
+            if db.unlock_achievement(request.player_name, "All-Rounder"):
+                new_achievements.append("All-Rounder")
+        if live_career_runs >= 100 and live_career_wickets >= 100:
+            if db.unlock_achievement(request.player_name, "Captain Fantastic"):
+                new_achievements.append("Captain Fantastic")
+        if live_career_runs >= 200 and live_career_wickets >= 200:
+            if db.unlock_achievement(request.player_name, "Legend"):
+                new_achievements.append("Legend")
+        if live_career_runs >= 500 and live_career_wickets >= 500:
+            if db.unlock_achievement(request.player_name, "The Immortal"):
+                new_achievements.append("The Immortal")
+        if live_career_runs >= 1000 and live_career_wickets >= 1000:
+            new_achievements.append("The All Seeing.")
+
     # Return result to frontend
     if match_state["status"] == "COMPLETED":
+        #Save final stats to DB player profile
+        db.update_career_stats(
+            player_name = request.player_name,
+            match_runs = match_state['final_runs'],
+            match_wickets = match_state['final_wickets']
+        )
+        
         return {
             "status": "COMPLETED",
             "player_move": request.player_move,
             "ai_move": ai_move,
             "is_wicket": is_wicket,
             "message": f"MATCH OVER! Final Score: {match_state['final_runs']}/{match_state['final_wickets']}",
-            "final_score": match_state
+            "final_score": match_state,
+            "unlocked_achievements": new_achievements
         }
     return {
         "status": "success",
@@ -116,7 +219,8 @@ def play_turn(request: PlayTurnRequest):
         "is_wicket": is_wicket,
         "runs_scored": runs_scored,
         "message": "WICKET!" if is_wicket else f"{runs_scored} runs scored.",
-        "current_score": match_state
+        "current_score": match_state,
+        "unlocked_achievements": new_achievements
     }
 
 @app.post("/check_player")
