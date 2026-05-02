@@ -48,8 +48,6 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
 
     // Execute Strategy
     if (!aiIsBatting) {
-        return mostFrequentNum;
-    } else {
         // Finding the absolute minimum frequency first
         int minCount = frequencies[0];
         for (int i = 1; i <= 10; i++) {

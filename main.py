@@ -58,6 +58,14 @@ def play_turn(request: PlayTurnRequest):
     if request.player_move < 0 or request.player_move > 10:
         raise HTTPException(status_code = 400, detail = "Invalid move. Must be between 0 and 10")
     
+    # Check if match is already over
+    pre_check = db.check_match_status(request.match_id) 
+    if pre_check.get('status') == "COMPLETED":
+        return {
+            "status": "error",
+            "message": "Match has already been completed."
+        }
+
     # Grab the last 5 plays from MySQL
     recent_plays = db.get_recent_plays(request.match_id, limit=5)
 
@@ -103,8 +111,8 @@ def play_turn(request: PlayTurnRequest):
     new_achievements = []
 
     # Calculate runs scored so far
-    total_match_runs = match_state.get("current_runs", match_state.get("final_runs", 0))
-    total_match_wickets = match_state.get("ai_wickets", match_state.get("ai_final_wickets", 0))
+    total_match_runs = match_state.get("player_runs", 0)
+    total_match_wickets = match_state.get("player_wickets", 0)
 
     # Get lifetime runs  and calculate true live career runs
     profile = db.get_player_profile(request.player_name)
@@ -201,8 +209,8 @@ def play_turn(request: PlayTurnRequest):
         #Save final stats to DB player profile
         db.update_career_stats(
             player_name = request.player_name,
-            match_runs = match_state['final_runs'],
-            match_wickets = match_state['ai_final_wickets'],
+            match_runs = match_state['player_runs'],
+            match_wickets = match_state['player_wickets'],
             result = result
         )
 
@@ -240,7 +248,7 @@ def play_turn(request: PlayTurnRequest):
             "player_move": request.player_move,
             "ai_move": ai_move,
             "is_wicket": is_wicket,
-            "message": f"MATCH OVER! Final Score: {match_state['final_runs']}/{match_state['final_wickets']} Target: {match_state['ai_final_runs']}",
+            "message": f"MATCH OVER! Final Score: {match_state['player_runs']}/{match_state['ai_wickets']} AI: {match_state['ai_runs']} / {match_state['player_wickets']}",
             "final_score": match_state,
             "unlocked_achievements": new_achievements
         }

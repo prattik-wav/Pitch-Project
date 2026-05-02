@@ -240,34 +240,34 @@ class DatabaseManager:
             conn.close()
 
     def check_match_status(self, match_id: int) -> dict:
-        """Checks if the match has reached its end conditions"""
+        """Calculates innings, targets, and Win/Loss/Draw states"""
         conn = self.get_connection()
         if not conn:
             return {"status": "error"}
         
         cursor = conn.cursor(dictionary=True)
         try:
-            # Get the current score
             cursor.execute("SELECT * FROM match_data WHERE id = %s", (match_id, ))
             match = cursor.fetchone()
 
             if not match:
                 return {"status": "error"}
             
+            # If the match is already complete, return it using the explicit keys
             if match["status"] == "COMPLETED":
                 return {
                     "status": "COMPLETED",
                     "result": match["result"],
-                    "final_runs": match["runs"],
-                    "final_wickets": match["wickets"],
-                    "ai_final_runs": match["player_runs_conceded"],
-                    "ai_final_wickets": match["ai_wickets"]
+                    "player_runs": match["runs"],
+                    "player_wickets": match["ai_wickets"], # Wickets taken by Player
+                    "ai_runs": match["player_runs_conceded"],
+                    "ai_wickets": match["wickets"]         # Wickets taken by AI
                 }
 
             p_runs = match["runs"]
-            p_wickets = match["wickets"]
+            p_wickets = match["wickets"] 
             ai_runs = match["player_runs_conceded"]
-            ai_wickets = match["ai_wickets"]
+            ai_wickets = match["ai_wickets"] 
 
             is_completed = False
             result = None
@@ -298,13 +298,14 @@ class DatabaseManager:
                 """)
                cursor.execute(sql, (result, match_id))
                conn.commit()
-               return {"status": "COMPLETED",
-                       "result": result, 
-                       "final_runs": p_runs, 
-                       "final_wickets": p_wickets, 
-                       "ai_final_runs": ai_runs, 
-                       "ai_final_wickets": ai_wickets
-                    }
+               return {
+                   "status": "COMPLETED",
+                   "result": result, 
+                   "player_runs": p_runs, 
+                   "player_wickets": ai_wickets, # Wickets taken by Player
+                   "ai_runs": ai_runs, 
+                   "ai_wickets": p_wickets       # Wickets taken by AI
+                }
             
             # Check innings if match is still present
             innings = 1 if(p_wickets == 0 and ai_wickets == 0) else 2
@@ -316,10 +317,10 @@ class DatabaseManager:
                 "status": "IN_PROGRESS", 
                 "result": result, 
                 "target": target,
-                "current_runs": p_runs, 
-                "current_wickets": p_wickets, 
+                "player_runs": p_runs, 
+                "player_wickets": ai_wickets, # Wickets taken by Player
                 "ai_runs": ai_runs, 
-                "ai_wickets": ai_wickets,
+                "ai_wickets": p_wickets,      # Wickets taken by AI
                 "innings": innings
             }
         except Error as e:
