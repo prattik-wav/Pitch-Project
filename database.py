@@ -274,7 +274,7 @@ class DatabaseManager:
         cursor = conn.cursor()
         try:
             sql = "INSERT INTO achievements (player_name, achievement) VALUES (%s, %s)"
-            cursor.execute(sql, player_name, achievement)
+            cursor.execute(sql, (player_name, achievement))
             return True # Successfully unlocked new achievement
         except IntegrityError:
             # Already unlocked Achievement
@@ -313,7 +313,7 @@ class DatabaseManager:
         try:
             sql = """
                 UPDATE player_profile 
-                SET lifetime_runs = lifeitme_runs + %s
+                SET lifetime_runs = lifetime_runs + %s
                     lifetime_wickets = lifetime_wickets + %s
                     total_matches = total_matches + 1
                 WHERE name = %s

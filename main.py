@@ -127,7 +127,7 @@ def play_turn(request: PlayTurnRequest):
         if db.unlock_achievement(request.player_name, "The Clairvoyant."):
             new_achievements.append("The Clairvoyant.")
 
-    if request.difficulty == 2 or request.difficulty == 3:
+    if request.difficulty in [2, 3]:
         # Runs Achievements
         if live_career_runs >= 1:
             if db.unlock_achievement(request.player_name, "First Shot"):
