@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import sys
 import os
 from database import DatabaseManager
+from fastapi.middleware.cors import CORSMiddleware
 
 # Point Python to compiled C++ engine inside the build directory
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
@@ -10,6 +11,14 @@ import handcricket_ai # type: ignore
 
 # Intialize FastAPI server
 app = FastAPI(title="Pitch.io", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_originals=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 db = DatabaseManager("pratzelsql")
 
