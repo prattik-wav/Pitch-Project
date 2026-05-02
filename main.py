@@ -15,7 +15,7 @@ app = FastAPI(title="Pitch.io", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_originals=["*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -127,7 +127,7 @@ def play_turn(request: PlayTurnRequest):
         if db.unlock_achievement(request.player_name, "The Clairvoyant."):
             new_achievements.append("The Clairvoyant.")
 
-    if request.difficulty == 1 or request.difficulty == 2:
+    if request.difficulty == 2 or request.difficulty == 3:
         # Runs Achievements
         if live_career_runs >= 1:
             if db.unlock_achievement(request.player_name, "First Shot"):
@@ -159,7 +159,7 @@ def play_turn(request: PlayTurnRequest):
                 new_achievements.append("First Blood")
         if live_career_wickets >= 10:
             if db.unlock_achievement(request.player_name, "Wicket Taker"):
-                new_achievements.append("First Blood")
+                new_achievements.append("Wicket Taker")
         if live_career_wickets >= 30:
             if db.unlock_achievement(request.player_name, "The Speedster"):
                 new_achievements.append("The Speedster")
@@ -192,7 +192,8 @@ def play_turn(request: PlayTurnRequest):
             if db.unlock_achievement(request.player_name, "The Immortal"):
                 new_achievements.append("The Immortal")
         if live_career_runs >= 1000 and live_career_wickets >= 1000:
-            new_achievements.append("The All Seeing.")
+            if db.unlock_achievement(request.player_name, "The All Seeing."):
+                new_achievements.append("The All Seeing.")
 
     # Return result to frontend
     if match_state["status"] == "COMPLETED":
@@ -202,7 +203,7 @@ def play_turn(request: PlayTurnRequest):
             match_runs = match_state['final_runs'],
             match_wickets = match_state['final_wickets']
         )
-        
+
         return {
             "status": "COMPLETED",
             "player_move": request.player_move,
