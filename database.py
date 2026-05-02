@@ -224,7 +224,7 @@ class DatabaseManager:
                 sql = """
                     UPDATE match_data 
                     SET player_runs_conceded = player_runs_conceded + %s,
-                        ai_wickets = ai_wickets + %s
+                        ai_wickets = ai_wickets + %s,
                         player_balls_bowled = player_balls_bowled + 1 
                     WHERE id = %s
                 """
@@ -430,7 +430,7 @@ class DatabaseManager:
         cursor = conn.cursor(dictionary=True)
         try:
             # We fetch everyone ordered by who has the most wins
-            cursor.fetchone("SELECT * FROM player_profile ORDER BY total_wins DESC, lifetime_runs DESC")
+            cursor.execute("SELECT * FROM player_profile ORDER BY total_wins DESC, lifetime_runs DESC")
             players = cursor.fetchall()
             
             leaderboard = []

@@ -211,10 +211,10 @@ def play_turn(request: PlayTurnRequest):
         live_wins = profile.get("total_wins", 0)
 
         if result == "WIN":
-            if live_wins > 1:
+            if live_wins >= 1:
                 if db.unlock_achievement(request.player_name, "First Victory"):
                     new_achievements.append("First Victory")
-            if live_wins > 10:
+            if live_wins >= 10:
                 if db.unlock_achievement(request.player_name, "Champion"):
                     new_achievements.append("Champion")
             if live_wins >= 50:
@@ -222,7 +222,7 @@ def play_turn(request: PlayTurnRequest):
                     new_achievements.append("Pitch Dominator")
         if result == "DRAW":
             if db.unlock_achievement(request.player_name, "A Rare Sight."):
-                new_achievements.append("A rare sight.")
+                new_achievements.append("A rare Sight.")
 
         return {
             "status": "COMPLETED",
