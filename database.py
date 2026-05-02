@@ -286,6 +286,48 @@ class DatabaseManager:
             cursor.close()
             conn.close()
 
+    def get_player_profile(self, player_name: str) -> dict:
+        """Fetches the player's lifetime stats from the database"""
+        conn = self.get_connection()
+        if not conn:
+            return {}
+        
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM player_profile WHERE name = %s", (player_name, ))
+            return cursor.fetchone() or {}
+        except Error as e:
+            print(f"[ERROR] Could not fetch profile: {e}")
+            return {}
+        finally:
+            cursor.close()
+            conn.close()
+
+    def update_career_stats(self, player_name: str, match_runs: int, match_wickets: int) -> bool:
+        """Permanently adds the match results to the player's lifetime total stats"""
+        conn = self.get_connection()
+        if not conn:
+            return False
+        
+        cursor = conn.cursor()
+        try:
+            sql = """
+                UPDATE player_profile 
+                SET lifetime_runs = lifeitme_runs + %s
+                    lifetime_wickets = lifetime_wickets + %s
+                    total_matches = total_matches + 1
+                WHERE name = %s
+            """
+            cursor.execute(sql, (match_runs, match_wickets, player_name))
+            conn.commit()
+            return True
+        except Error as e:
+            print(f"[ERROR] Could not update career stats: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     def get_recent_plays(self, match_id: int, limit: int = 5) -> list[int]:
         """Fetches the most recent moves made by the player in a specific match"""
         conn = self.get_connection()
