@@ -49,17 +49,17 @@ int getAIPrediction(const std::vector<int> &recentPlays, bool aiIsBatting, int d
     // Execute Strategy
     if (!aiIsBatting) {
         // Finding the absolute minimum frequency first
-        int minCount = frequencies[0];
+        int maxCount = frequencies[0];
         for (int i = 1; i <= 10; i++) {
-            if (frequencies[i] < minCount) {
-                minCount = frequencies[i];
+            if (frequencies[i] > maxCount) {
+                maxCount = frequencies[i];
             }
         }
         
         // Collect all the numbers that share the minimum frequency
         std::vector<int> bestMoves;
         for (int i = 0; i <= 10; i++) {
-            if (frequencies[i] == minCount) {
+            if (frequencies[i] == maxCount) {
                 bestMoves.push_back(i);
             }
         }
