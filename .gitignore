@@ -7,3 +7,16 @@ __pycache__/
 References/
 .env
 .vscode
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C++ Build Artifacts
+build/
+CMakeCache.txt
+CMakeFiles/
+
+# Environment Variables
+.env
