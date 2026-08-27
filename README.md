@@ -121,7 +121,7 @@ The application will be live at `http://localhost:5173` (or configured dev port)
 
 ## 👨‍💻 Author
 
-Developed with passion by **Prattik K Karthikeyan**.
+Developed with passion by **Prattik K**.
 
 ---
 
